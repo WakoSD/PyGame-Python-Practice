@@ -13,3 +13,7 @@ or
 ```
 pip3 install pygame
 ```
+
+---
+STATUS:
+At this moment the dragon can move and the clouds go down correctly. It is functioning. 
