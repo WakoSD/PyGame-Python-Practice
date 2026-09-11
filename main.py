@@ -11,7 +11,7 @@ running = True
 dt = 0
 player_pos = pygame.Vector2(screen.get_width(), screen.get_height()) / 2
 
-# Cargar el dragón UNA sola vez (no dentro del while loop, es carísimo hacerlo cada frame)
+# Cargar el dragón UNA sola vez 
 dragon = pygame.image.load("dragon.png").convert_alpha()
 scaled_dragon = pygame.transform.scale(
     dragon, (int(dragon.get_width() * 0.2), int(dragon.get_height() * 0.2))
@@ -47,13 +47,34 @@ class Cloud:
         pygame.draw.circle(surface, (255, 255, 255), (int(self.x + 50 * s), int(self.y + 20 * s)), int(50 * s))
         pygame.draw.circle(surface, (255, 255, 255), (int(self.x - 50 * s), int(self.y + 20 * s)), int(50 * s))
 
+class Fireball:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.speed = 300  # px/seg
+
+    def update(self, dt):
+        self.y -= self.speed * dt+5
+
+    def draw(self, surface):
+        pygame.draw.circle(surface, (255, 69, 0), (int(self.x), int(self.y)), 10)
+
 
 clouds = [Cloud() for _ in range(6)]
+fireballs = [Fireball(player_pos.x, player_pos.y) for _ in range(3)]  # Lista de bolas de fuego
+
+# --- Cooldown para las bolas de fuego ---
+FIREBALL_COOLDOWN = 0.3  # segundos entre disparos
+last_fireball_time = -FIREBALL_COOLDOWN  # Permite el primer disparo
 
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+
+    # --- Actualizar tiempo global ---
+    dt = clock.tick(60) / 1000
+    last_fireball_time += dt
 
     # --- Fondo ---
     screen.blit(sky_img, (0, 0))
@@ -62,6 +83,18 @@ while running:
     for cloud in clouds:
         cloud.update(dt)
         cloud.draw(screen)
+
+    # --- Bolas de fuego ---
+    if pygame.key.get_pressed()[pygame.K_SPACE]:
+        if last_fireball_time >= FIREBALL_COOLDOWN:
+            fireballs.append(Fireball(player_pos.x, player_pos.y))
+            last_fireball_time = 0  # Reiniciar el contador del cooldown
+
+  
+    for fireball in fireballs:
+        fireball.update(dt)
+        fireball.draw(screen)
+  
 
     # --- Movimiento del dragón ---
     keys = pygame.key.get_pressed()
@@ -82,7 +115,5 @@ while running:
     screen.blit(scaled_dragon, (player_pos.x - dragon_half_w, player_pos.y - dragon_half_h))
 
     pygame.display.flip()
-
-    dt = clock.tick(60) / 1000
 
 pygame.quit()
